@@ -1,0 +1,3 @@
+export function PreviewControls({ mode, onChange }: { mode: "pc" | "sp"; onChange: (mode: "pc" | "sp") => void }) {
+  return <aside className="presentation-controls" aria-label="表示プレビュー設定"><div className="presentation-controls-inner"><div className="presentation-title"><b>表示プレビュー</b><span>クライアントプレゼン用</span></div><div className="control-group"><span className="control-label">表示</span><div className="segmented-control"><button className={mode === "pc" ? "selected" : ""} onClick={() => onChange("pc")} aria-pressed={mode === "pc"}>PC</button><button className={mode === "sp" ? "selected" : ""} onClick={() => onChange("sp")} aria-pressed={mode === "sp"}>SP</button></div></div></div></aside>;
+}
