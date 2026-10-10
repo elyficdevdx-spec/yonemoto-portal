@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CustomerPortal } from "./customer-portal";
 import { DemoToolbar } from "./demo-toolbar";
 import { PreviewControls } from "./preview-controls";
+import { usePhoneScale } from "./use-phone-scale";
 import { CustomerStage, DEFAULT_CUSTOMER_STAGE } from "@/lib/customer-stage";
 
 type PreviewMode = "pc" | "sp";
@@ -17,6 +18,7 @@ const stageOptions: { value: CustomerStage; short: string; description: string }
 export function PresentationPreview({ embedded = false, initialStage = DEFAULT_CUSTOMER_STAGE }: { embedded?: boolean; initialStage?: CustomerStage }) {
   const [stage, setStage] = useState<CustomerStage>(initialStage);
   const [mode, setMode] = useState<PreviewMode>("pc");
+  const { canvasRef, phoneStyle } = usePhoneScale(mode);
 
   if (embedded) return <CustomerPortal stage={stage} />;
 
@@ -27,13 +29,13 @@ export function PresentationPreview({ embedded = false, initialStage = DEFAULT_C
       {mode === "pc" ? (
         <div className="presentation-pc"><CustomerPortal key={stage} stage={stage} /></div>
       ) : (
-        <div className="presentation-stage">
+        <div className="presentation-stage" ref={canvasRef} style={phoneStyle}>
           <div className="device-frame">
             <div className="device-speaker" aria-hidden="true" />
             <iframe key={stage} title={`${stageOptions.find(x => x.value === stage)?.short}ステージのスマートフォン表示`} src={`/?preview=sp&stage=${stage}`} />
             <div className="device-home" aria-hidden="true" />
           </div>
-          <p>スマートフォン表示・375 × 740px</p>
+          <p>スマートフォン表示・375 × 700px</p>
         </div>
       )}
     </div>

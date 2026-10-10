@@ -34,16 +34,18 @@
 @media(max-width:700px){.mock-toolbar{padding:10px 14px;flex-wrap:wrap;gap:10px}.mock-toolbar-caption{gap:10px}.mock-demo-badge{font-size:10px}.mock-toolbar-description{font-size:9px}.mock-toolbar-controls{width:100%;gap:8px}.mock-toolbar select{flex:1;min-width:0;font-size:11px;padding-left:10px}.mock-toolbar select[aria-label="顧客ステージ"]{min-width:0}.mock-toolbar-help{flex-shrink:0}.presentation-controls{display:none}}
 
 /* Keep a phone's portrait ratio instead of compressing its height. */
-.device-frame{width:399px;height:784px;min-height:784px;padding:20px 10px;background:#20242a;border-radius:40px;flex-shrink:0}
-.device-frame iframe{width:375px;height:740px;border-radius:27px}
+.device-frame{width:399px;height:744px;min-height:744px;padding:20px 10px;background:#20242a;border-radius:40px;flex-shrink:0}
+.device-frame iframe{width:375px;height:700px;border-radius:27px}
 .presentation-stage{min-height:calc(100vh - 106px);padding:24px 20px;background:#edf0f5}
 .admin-preview-canvas{background:#edf0f5;min-height:calc(100vh - 106px)}
 .admin-preview-frame{position:relative;width:100%;height:calc(100vh - 106px);min-height:600px}
 .admin-preview-frame iframe{display:block;width:100%;height:100%;border:0;background:#f3f4f6}
 .admin-preview-frame>.device-speaker,.admin-preview-frame>.device-home{display:none}
 .admin-preview.is-sp .admin-preview-canvas{display:flex;flex-direction:column;align-items:center;padding:24px 20px}
-.admin-preview.is-sp .admin-preview-frame{width:399px;height:784px;min-height:784px;padding:20px 10px;background:#20242a;border:2px solid #0f1216;border-radius:40px;box-shadow:0 22px 65px #26334225,0 0 0 2px #41464d inset;flex-shrink:0}
-.admin-preview.is-sp .admin-preview-frame iframe{width:375px;height:740px;border-radius:27px}
+.admin-preview.is-sp .admin-preview-frame{width:399px;height:744px;min-height:744px;padding:20px 10px;background:#20242a;border:2px solid #0f1216;border-radius:40px;box-shadow:0 22px 65px #26334225,0 0 0 2px #41464d inset;flex-shrink:0}
+.admin-preview.is-sp .admin-preview-frame iframe{width:375px;height:700px;border-radius:27px}
 .admin-preview.is-sp .device-speaker,.admin-preview.is-sp .device-home{display:block}
 .admin-preview-canvas>p{font-size:11px;color:#75808c;margin:12px 0 0}
 @media(max-width:700px){.admin-preview-canvas,.admin-preview.is-sp .admin-preview-canvas{padding:0;display:block;background:#fff}.admin-preview-frame,.admin-preview.is-sp .admin-preview-frame{width:100%;height:calc(100dvh - 106px);min-height:500px;padding:0;border:0;border-radius:0;box-shadow:none;background:#fff}.admin-preview.is-sp .admin-preview-frame iframe{width:100%;height:100%;border-radius:0}.admin-preview-frame>.device-speaker,.admin-preview-frame>.device-home,.admin-preview-canvas>p{display:none!important}}
+
+@media(min-width:701px){.device-frame,.admin-preview.is-sp .admin-preview-frame{zoom:var(--phone-scale,1)}.presentation-stage,.admin-preview.is-sp .admin-preview-canvas{padding-top:20px;padding-bottom:20px}}
