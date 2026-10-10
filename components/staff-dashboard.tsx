@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { DemoToolbar } from "./demo-toolbar";
 import { Icon } from "./icons";
+import { StaffCalendar } from "./staff-calendar";
+import { StaffChat } from "./staff-chat";
+import { ContentManager } from "./content-manager";
 
 type Customer = { id: number; name: string; staff: string; house: string; city: string; progress: string; handover: string };
 const initialCustomers: Customer[] = [
@@ -24,7 +27,7 @@ const navigation = [
   { id: "customers", label: "顧客管理", icon: "people" },
   { id: "tasks", label: "対応案件", icon: "clipboard" },
   { id: "calendar", label: "マイカレンダー", icon: "calendar" },
-  { id: "messages", label: "メッセージ", icon: "chat" },
+  { id: "messages", label: "チャット", icon: "chat" },
   { id: "approvals", label: "図面・承認管理", icon: "check" },
   { id: "contents", label: "コンテンツ管理", icon: "book" },
 ];
@@ -37,6 +40,9 @@ function Modal({ title, close, children }: { title: string; close: () => void; c
 
 export function StaffDashboard({ onLogout, embedded = false }: { onLogout: () => void; embedded?: boolean }) {
   const [page, setPage] = useState("dashboard");
+  const [unreadCounts, setUnreadCounts] = useState<Record<number, number>>({ 1: 1, 2: 0, 3: 1 });
+  const unreadTotal = Object.values(unreadCounts).reduce((total, count) => total + count, 0);
+  const markRead = useCallback((id: number) => setUnreadCounts(previous => previous[id] ? { ...previous, [id]: 0 } : previous), []);
   const [customers, setCustomers] = useState(initialCustomers);
   const [tasks, setTasks] = useState(initialTasks);
   const [query, setQuery] = useState("");
@@ -76,17 +82,18 @@ export function StaffDashboard({ onLogout, embedded = false }: { onLogout: () =>
   return <div className="staff-shell staff-dashboard">
     {!embedded && <DemoToolbar current="admin" />}
     <header className="staff-header"><button className="staff-brand" onClick={() => go("dashboard")}>米元建設工業 <span>様</span></button><span>顧客・案件管理</span><div className="admin-account"><Icon name="person" /><strong>佐藤 美咲</strong><span>営業</span><button onClick={onLogout}>ログアウト</button></div></header>
-    <div className="staff-body"><aside className="staff-sidebar"><nav aria-label="社内管理メニュー">{navigation.map((item, index) => <div key={item.id}>{index === 5 && <p className="admin-nav-group">管理</p>}<button className={page === item.id ? "active" : ""} aria-current={page === item.id ? "page" : undefined} onClick={() => go(item.id)}><Icon name={item.icon} /><span>{item.label}</span></button></div>)}</nav></aside>
-    <main className="admin-main"><div className="admin-page-heading"><h1>{navigation.find(item => item.id === page)?.label}</h1><p>{page === "dashboard" ? "佐藤 美咲さん、今日の対応を確認しましょう。" : "担当のお客様と住宅に関する情報を確認できます。"}</p></div>
+    <div className="staff-body"><aside className="staff-sidebar"><nav aria-label="社内管理メニュー">{navigation.map((item, index) => <div key={item.id}>{index === 5 && <p className="admin-nav-group">管理</p>}<button className={page === item.id ? "active" : ""} aria-current={page === item.id ? "page" : undefined} onClick={() => go(item.id)}><Icon name={item.icon} /><span>{item.label}</span>{item.id === "messages" && unreadTotal > 0 && <span className="staff-unread-badge" aria-label={`未読${unreadTotal}件`}>{unreadTotal}</span>}</button></div>)}</nav></aside>
+    <main className="admin-main"><div className="admin-page-heading"><h1>{navigation.find(item => item.id === page)?.label}</h1><p>{page === "dashboard" ? "佐藤 美咲さん、今日の対応を確認しましょう。" : page === "calendar" ? "担当チームの予定をカレンダーで確認しましょう。" : page === "messages" ? "お客様ごとの会話を確認し、メッセージを送信できます。" : "担当のお客様と住宅に関する情報を確認できます。"}</p></div>
+      {page === "dashboard" && unreadTotal > 0 && <button className="staff-unread-notice" onClick={() => go("messages")}><Icon name="chat" size={20} /><span>お客様から未読のメッセージがあります</span><span className="staff-unread-badge">{unreadTotal}</span><Icon name="arrow" size={16} /></button>}
       {notice && <p className="admin-notice" role="status">{notice}</p>}
-      {page === "dashboard" && <><section className="admin-assigned"><div><span>自分が担当しているお客様</span><strong>{mine.length}<small>名</small></strong></div><button className="admin-primary" onClick={() => { setOwner("mine"); setQuery(""); customerSection.current?.scrollIntoView({ behavior: "smooth" }); }}>担当のお客様を見る</button></section><div className="admin-stats">{stats.map(stat => <button key={stat.label} className="admin-stat" onClick={stat.action}><span>{stat.label}</span><strong className={stat.urgent ? "urgent" : ""}>{stat.count}<small>件</small></strong><span>詳細を確認 <Icon name="arrow" size={16} /></span></button>)}</div><div className="admin-dashboard-panels"><section className="admin-panel"><div className="admin-section-heading"><h2>優先して対応する案件</h2><button className="admin-text-button" onClick={() => showTasks("all")}>すべて見る</button></div>{taskList(tasks.filter(task => task.status !== "完了"))}</section><section className="admin-panel"><h2>直近の予定</h2>{appointments.map(item => <article className="admin-appointment" key={item.title}><h3>{item.title}</h3><p>{item.customer} 様 ／ {item.staff}</p></article>)}<button className="admin-outline" onClick={() => go("calendar")}>予約一覧へ</button></section></div>{customerList}</>}
+      {page === "dashboard" && <><section className="admin-assigned"><div><span>自分が担当しているお客様</span><strong>{mine.length}<small>名</small></strong></div><button className="admin-primary" onClick={() => { setOwner("mine"); setQuery(""); customerSection.current?.scrollIntoView({ behavior: "smooth" }); }}>担当のお客様を見る</button></section><div className="admin-stats">{stats.map(stat => <button key={stat.label} className="admin-stat" onClick={stat.action}><span>{stat.label}</span><strong className={stat.urgent ? "urgent" : ""}>{stat.count}<small>件</small></strong><span>詳細を確認 <Icon name="arrow" size={16} /></span></button>)}</div><div className="admin-dashboard-panels"><section className="admin-panel"><div className="admin-section-heading"><h2>優先して対応する案件</h2><button className="admin-text-button" onClick={() => showTasks("all")}>すべて見る</button></div>{taskList(tasks.filter(task => task.status !== "完了"))}</section><section className="admin-panel"><h2>直近の予定</h2>{appointments.map(item => <article className="admin-appointment" key={item.title}><h3>{item.title}</h3><p>{item.customer} 様 ／ {item.staff}</p></article>)}<button className="admin-outline" onClick={() => go("calendar")}>カレンダーを見る</button></section></div>{customerList}</>}
       {page === "customers" && customerList}
       {page === "tasks" && <section className="admin-panel"><label className="admin-task-filter">対応状況<select value={taskFilter} onChange={event => setTaskFilter(event.target.value)}>{["all", "未対応", "対応中", "社内確認中", "完了"].map(value => <option key={value} value={value}>{value === "all" ? "すべて" : value}</option>)}</select></label>{taskList(visibleTasks)}</section>}
-      {page === "calendar" && <section className="admin-panel"><h2>予約一覧</h2>{appointments.map(item => <article className="admin-appointment" key={item.title}><span className="admin-badge">{item.date}　{item.time}</span><h3>{item.title}</h3><p>{item.customer} 様 ／ {item.staff}</p></article>)}</section>}
+      <div hidden={page !== "calendar"}><StaffCalendar appointments={appointments} /></div>
       {page === "approvals" && <section className="admin-panel"><h2>図面の確認・承認</h2><article className="admin-appointment"><span className="admin-badge">{approved ? "承認済み" : "承認待ち"}</span><h3>山田様邸　1階平面図 Ver.3</h3><p>キッチン横の収納を拡張しています。</p><button className="admin-primary" disabled={approved} onClick={() => { setApproved(true); setNotice("図面の承認状態を更新しました（モック）。"); }}>{approved ? "承認済み" : "承認する"}</button></article></section>}
-      {page === "messages" && <section className="admin-panel"><h2>お客様からのご相談</h2>{taskList(tasks)}</section>}
-      {page === "contents" && <section className="admin-panel"><h2>公開コンテンツ</h2><article className="admin-appointment"><span className="admin-badge">公開中</span><h3>光と風を感じる平屋の完成見学会</h3><p>10月24日（土）・25日（日）／ 沖縄県浦添市</p></article><p className="admin-muted">コンテンツの編集機能は準備中です。</p></section>}
-      <footer className="admin-footer">米元建設工業 様 ｜ 操作体験モック<br />人物・予約情報はサンプルです。入力は再読み込みで初期化されます。</footer>
+      <div hidden={page !== "messages"}><StaffChat active={page === "messages"} unreadCounts={unreadCounts} onRead={markRead} /></div>
+      <div hidden={page !== "contents"}><ContentManager /></div>
+      <footer className="admin-footer">米元建設工業 様 ｜ 操作体験モック<br />人物・予約情報はサンプルです。予約・チャットは再読み込みで初期化されます。コンテンツの編集はこのタブ内のみです。</footer>
     </main></div>
     {selectedTask && <Modal title={selectedTask.title} close={() => setTaskId(null)}><p>{selectedTask.customer} 様 ／ 担当 {selectedTask.staff}</p><p>{selectedTask.body}</p><p className="admin-muted">期限：{selectedTask.deadline}</p><label className="admin-form-label">対応状況<select value={selectedTask.status} onChange={event => setTasks(previous => previous.map(task => task.id === selectedTask.id ? { ...task, status: event.target.value } : task))}>{["未対応", "対応中", "社内確認中", "完了"].map(status => <option key={status}>{status}</option>)}</select></label><button className="admin-primary" onClick={() => { setTaskId(null); setNotice("案件の対応状況を更新しました（モック）。"); }}>確認して閉じる</button></Modal>}
     {editing && <Modal title={editing === "new" ? "住宅を登録" : "顧客・住宅の詳細・編集"} close={() => setEditing(null)}><form className="admin-edit-form" onSubmit={saveCustomer}>{[{ key: "name", label: "お客様名" }, { key: "house", label: "住宅名" }, { key: "city", label: "所在地" }, { key: "staff", label: "担当者" }].map(field => <label key={field.key}>{field.label}<input name={field.key} defaultValue={editing === "new" ? (field.key === "staff" ? "佐藤 美咲" : "") : editing[field.key as keyof Customer]} required /></label>)}<label>進捗<select name="progress" defaultValue={editing === "new" ? "契約前" : editing.progress}>{["契約前", "設計・仕様", "工事中", "引き渡し済み"].map(progress => <option key={progress}>{progress}</option>)}</select></label><label>引き渡し予定／実績<input type="date" name="handover" defaultValue={editing === "new" ? "" : editing.handover} /></label><button className="admin-primary" type="submit">保存する</button></form></Modal>}
