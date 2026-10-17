@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { Icon } from "./icons";
+import { AppInstallBanner } from "./app-install-banner";
 import { messages } from "@/lib/mock-data";
 import { CustomerStage, getStageExperience } from "@/lib/customer-stage";
 
@@ -17,16 +18,17 @@ export function CustomerPortal({ stage }: { stage: CustomerStage }) {
   const [bookingDraft, setBookingDraft] = useState<BookingDraft>({ title: "仕様・設備のお打合せ" });
   const [bookingVersion, setBookingVersion] = useState(0);
   const [reservationDetail, setReservationDetail] = useState<Reservation | null>(null);
-  const openBooking = (draft: BookingDraft = { title: stage === "downstream" ? "お引き渡し後1年点検" : stage === "upstream" ? "家づくり個別相談会" : "仕様・設備のお打合せ" }) => { setBookingDraft(draft); setBookingVersion(value => value + 1); setReservationDetail(null); setPage("bookings"); window.scrollTo({ top: 0 }); };
+  const openBooking = (draft: BookingDraft = { title: stage === "downstream" ? "お引き渡し後1年点検" : stage === "upstream" ? "家づくり個別相談会" : "仕様・設備のお打合せ" }) => { setBookingDraft(draft); setBookingVersion(value => value + 1); setReservationDetail(null); setPage("bookings"); window.scrollTo({ top: 0, behavior: "instant" }); };
   const changeReservation = (reservation: Reservation) => openBooking({ title: reservation.title, id: reservation.id, allowedDates: reservation.allowedDates, allowedTimes: reservation.allowedTimes, place: reservation.place });
   const saveReservation = (reservation: Reservation) => setReservations(previous => (previous.some(item => item.id === reservation.id) ? previous.map(item => item.id === reservation.id ? reservation : item) : [...previous, reservation]).sort((a, b) => `${a.date}${a.time}`.localeCompare(`${b.date}${b.time}`)));
   const exp=getStageExperience(stage);
   const nav=useMemo(()=>[{p:"home",l:"ホーム",i:"home"},{p:"catalog",l:"カタログ",i:"book"},{p:"chat",l:"チャット",i:"chat"},{p:exp.mainPage,l:exp.mainLabel,i:exp.mainPage==="myhome"?"house":"calendar"},{p:"profile",l:"マイページ",i:"person"}] as {p:Page,l:string,i:string}[],[exp]);
-  const go=(p:Page)=>{if(p==="bookings"){openBooking();return;}setPage(p);window.scrollTo({top:0,behavior:"smooth"})};
+  const go=(p:Page)=>{if(p==="bookings"){openBooking();return;}setPage(p);window.scrollTo({top:0,behavior:"instant"})};
   const notify=(s:string)=>{setToast(s);window.setTimeout(()=>setToast(""),2200)};
   const toggle=(id:number)=>{setFavorites(v=>v.includes(id)?v.filter(x=>x!==id):[...v,id]);notify(favorites.includes(id)?"お気に入りから削除しました":"お気に入りに追加しました")};
   const consultationVisible = stage === "upstream" && (page === "home" || page === "catalog");
   return <div className={`portal-shell ${consultationVisible ? "has-consultation-action" : ""}`}>
+    <AppInstallBanner onShow={() => notify("アプリは現在配信準備中です。")} />
     <header className="site-header"><button className="brand" onClick={()=>go("home")}><i/>米元建設工業 <small>様</small></button><div className="header-actions"><button onClick={()=>go("favorites")}><Icon name="heart"/><span>お気に入り</span>{favorites.length>0&&<em>{favorites.length}</em>}</button><button onClick={()=>go("notices")}><Icon name="bell"/><span>お知らせ</span><i/></button></div></header>
     <nav className="global-nav">{nav.map(x=><button key={x.p} className={page===x.p?"active":""} onClick={()=>go(x.p)}><Icon name={x.i}/><span>{x.l}</span></button>)}</nav>
     <main className="main-content">
@@ -35,7 +37,7 @@ export function CustomerPortal({ stage }: { stage: CustomerStage }) {
       {page==="chat"&&<Chat notify={notify}/>} {page==="events"&&<PublishedEvents book={openBooking}/>} {page==="bookings"&&<BookingPage key={bookingVersion} reservations={reservations} draft={bookingDraft} save={saveReservation} change={changeReservation} details={setReservationDetail} home={()=>go("home")}/>} {page==="myhome"&&<MyHome stage={stage} notify={notify}/>} {page==="profile"&&<Profile stage={stage}/>} {page==="notices"&&<Notices stage={stage} go={go}/>} 
       <footer>米元建設工業 様｜操作体験モック<br/>人物・予約情報はサンプルです。予約・チャットは再読み込みで初期化されます。コンテンツの編集はこのタブ内のみです。</footer>
     </main>
-    {consultationVisible && <aside className="consultation-action" aria-label="家づくりのご相談・予約"><button onClick={() => openBooking({ title: "家づくり個別相談会" })}><Icon name="calendar" size={20} /><span>ご相談・予約</span><Icon name="arrow" size={18} /></button></aside>}
+    {consultationVisible && <aside className="consultation-action" aria-label="家づくりのご相談・予約"><button onClick={() => openBooking({ title: "家づくり個別相談会" })}><Icon name="calendar" size={20} /><span>ご相談・予約</span></button></aside>}
     {reservationDetail&&<ReservationDetails reservation={reservationDetail} close={()=>setReservationDetail(null)} change={()=>changeReservation(reservationDetail)}/>}
     {detail!==null&&<Detail id={detail} favorites={favorites} close={()=>setDetail(null)} toggle={toggle} notify={notify}/>} {toast&&<div className="toast">{toast}</div>}
   </div>;
